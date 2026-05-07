@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrīmX SOG Calculator — Primekss</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  :root {
+    --navy: #141414;
+    --blue: #B5111C;
+    --orange: #EC192D;
+    --orange-light: #EF3546;
+    --green: #3E8A39;
+    --green-bg: #EBF7EA;
+    --red: #9A0E17;
+    --red-bg: #FDEAEC;
+    --yellow: #f9a825;
+    --yellow-bg: #fffde7;
+    --bg: #F4F4F4;
+    --card: #ffffff;
+    --border: #DCDCDC;
+    --text: #141414;
+    --muted: #525759;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  /* ─── HEADER ─────────────────────────────────────── */
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .logo-text {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .logo-text span { color: var(--orange); }
+  .header-sub { color: #aac4e0; font-size: 12px; margin-top: 1px; }
+  .header-title { flex: 1; }
+  .header-title h1 { font-size: 18px; font-weight: 600; }
+  .header-title p { font-size: 12px; color: #aac4e0; }
+  .version-badge {
+    background: var(--orange);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── MAIN LAYOUT ────────────────────────────────── */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 70px);
+  }
+  .inputs-panel {
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    max-height: calc(100vh - 70px);
+    position: sticky;
+    top: 0;
+  }
+  .results-panel {
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  /* ─── SECTION ACCORDION ─────────────────────────── */
+  .section {
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    background: #f8fafc;
+    transition: background 0.15s;
+  }
+  .section-header:hover { background: #eef3fa; }
+  .section-header .sico {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+  .section-header .chevron {
+    transition: transform 0.2s;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .section-header.open .chevron { transform: rotate(180deg); }
+  .section-header span.stitle { flex: 1; }
+  .section-body { padding: 14px 16px; display: none; }
+  .section-body.open { display: block; }
+
+  /* ─── FORM CONTROLS ─────────────────────────────── */
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .field label .unit { color: #94a3b8; font-weight: 400; }
+  .field input[type=number],
+  .field input[type=text],
+  .field select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text);
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+  .field input:focus,
+  .field select:focus { outline: none; border-color: var(--orange); }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .field .sep { padding: 0 4px; color: var(--muted); align-self: flex-end; padding-bottom: 10px; font-size: 13px; }
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-group label {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .radio-group input[type=radio] { display: none; }
+  .radio-group input[type=radio]:checked + label {
+    border-color: var(--orange);
+    background: #FDEAEC;
+    color: var(--orange);
+  }
+  .toggle-field { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .toggle-field label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .toggle-switch {
+    position: relative; width: 40px; height: 22px; cursor: pointer;
+  }
+  .toggle-switch input { display: none; }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: #cbd5e1; border-radius: 11px;
+    transition: background 0.2s;
+  }
+  .toggle-switch input:checked ~ .toggle-track { background: var(--orange); }
+  .toggle-thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    background: #fff; border-radius: 50%;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-switch input:checked ~ .toggle-thumb { left: 21px; }
+  .conditional { display: none; }
+  .conditional.visible { display: block; }
+
+  /* ─── CALCULATE BUTTON ───────────────────────────── */
+  .calc-btn {
+    width: calc(100% - 32px);
+    margin: 16px;
+    padding: 11px;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: background 0.15s;
+  }
+  .calc-btn:hover { background: #C5151F; }
+
+  /* ─── RESULTS PANEL ──────────────────────────────── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .card-head {
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-head.navy { background: var(--navy); }
+  .card-head.blue { background: var(--blue); }
+  .card-head.orange { background: var(--orange); }
+  .card-body { padding: 12px 14px; }
+  .calc-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    gap: 8px;
+  }
+  .calc-row:last-child { border-bottom: none; }
+  .calc-row .clabel { color: var(--muted); flex: 1; min-width: 0; }
+  .calc-row .cval {
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .calc-row .cunit { color: var(--muted); font-size: 11px; margin-left: 3px; flex-shrink: 0; }
+
+  /* ─── CHECK ROW ──────────────────────────────────── */
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .check-row.ok { background: var(--green-bg); color: var(--green); }
+  .check-row.fail { background: var(--red-bg); color: var(--red); }
+  .check-row .check-ico { font-size: 18px; font-weight: 700; }
+  .check-row .check-values { flex: 1; }
+  .check-row .check-values small { display: block; font-size: 11px; font-weight: 400; opacity: 0.8; margin-top: 2px; }
+
+  /* ─── SUMMARY CARD ───────────────────────────────── */
+  .summary-card {
+    grid-column: 1 / -1;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 2px solid var(--orange);
+    box-shadow: 0 2px 8px rgba(230,81,0,0.15);
+    overflow: hidden;
+  }
+  .summary-head {
+    background: var(--orange);
+    color: #fff;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .summary-body {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .summary-item {
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+  }
+  .summary-item .si-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 2px; }
+  .summary-item .si-value { font-size: 18px; font-weight: 800; color: var(--orange); }
+  .summary-item .si-unit { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  /* ─── OVERALL STATUS ─────────────────────────────── */
+  .overall-status {
+    grid-column: 1 / -1;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .overall-status.ok { background: var(--green-bg); color: var(--green); border: 2px solid var(--green); }
+  .overall-status.fail { background: var(--red-bg); color: var(--red); border: 2px solid var(--red); }
+  .overall-status .os-icon { font-size: 22px; }
+
+  /* ─── WARNING MESSAGES ───────────────────────────── */
+  .warnings { grid-column: 1 / -1; }
+  .warn-msg {
+    background: var(--yellow-bg);
+    border-left: 4px solid var(--yellow);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #5f4400;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* ─── PLACEHOLDER ──────────────────────────────────  */
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    color: var(--muted);
+    text-align: center;
+    gap: 10px;
+  }
+  .placeholder .plico { font-size: 48px; opacity: 0.4; }
+
+  /* ─── DISCLAIMER ─────────────────────────────────── */
+  .disclaimer {
+    background: #f1f5f9;
+    border-top: 1px solid var(--border);
+    padding: 12px 20px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .disclaimer strong { color: var(--text); }
+
+  /* ─── MISC ───────────────────────────────────────── */
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .ok-dot { background: var(--green); }
+  .fail-dot { background: var(--red); }
+  .na-dot { background: #94a3b8; }
+  .italic { font-style: italic; }
+  .bold { font-weight: 700; }
+  .divider { height: 1px; background: var(--border); margin: 8px 0; }
+  .results-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--orange);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── FORMULA ROWS ───────────────────────────────── */
+  .formula-row {
+    padding: 2px 14px 5px;
+    background: #edf2f7;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .formula-row .f-src {
+    font-size: 10px;
+    color: #8896a8;
+    font-style: italic;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .formula-row .f-eq { flex: 1; min-width: 0; }
+  .katex { font-size: 0.82em; }
+  .warn-msg .warn-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--yellow);
+    color: #5f4400;
+    font-size: 10px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* ─── RESPONSIVE ─────────────────────────────────── */
+  @media (max-width: 900px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .inputs-panel { max-height: none; position: static; }
+    .results-grid { grid-template-columns: 1fr; }
+    .summary-body { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-text">Prī<span>m</span>X</div>
+    <div class="header-sub">by Primekss Group</div>
+  </div>
+  <div class="header-title">
+    <h1>SOG Design Calculator</h1>
+    <p>Slab on Grade · Yield Line Theory (TR34 4th Ed.) · Plastic design on elastic subbase</p>
+  </div>
+  <span class="version-badge">v1.66SF</span>
+</header>
+
+<div class="main-layout">
+
+  <!-- ════════════════════════════════════════════════
+       INPUT PANEL
+  ════════════════════════════════════════════════ -->
+  <div class="inputs-panel">
+
+    <!-- Project Info -->
+    <div class="section">
+      <div class="section-header open" onclick="toggleSection(this)">
+        <span class="sico" style="background:#f5e6e8;color:var(--orange)">i</span>
+        <span class="stitle">Project Information</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body open">
+        <div class="field"><label>Project name</label><input type="text" id="proj_name" placeholder="Enter project name"></div>
+        <div class="field-row">
+          <div class="field"><label>Customer</label><input type="text" id="proj_customer" placeholder="Customer name"></div>
+          <div class="field"><label>Date</label><input type="text" id="proj_date" placeholder="dd.mm.yyyy"></div>
+        </div>
+        <div class="field">
+          <label>Country</label>
+          <select id="proj_country">
+            <option value="World">— Select country —</option>
+            <option value="Israel">Israel</option>
+            <option value="Germany">Germany</option>
+            <option value="World" selected>Other / World</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Placement of slab</label>
+          <select id="placement">
+            <option value="Inside/Heated" selected>Inside / Heated</option>
+            <option value="Cold/Unheated">Cold / Unheated</option>
+            <option value="Outside">Outside</option>
+            <option value="Freezer">Freezer</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concrete & Slab -->
+    <div class="section">
+      <div class="section-header open" onclick="toggleSection(this)">
+        <span class="sico" style="background:#f5e6e8;color:var(--orange)">C</span>
+        <span class="stitle">Concrete &amp; Slab</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div class="field">
+            <label>Concrete class</label>
+            <select id="concrete_class" onchange="recalc()">
+              <option value="B30">B30</option>
+              <option value="B35">B35</option>
+              <option value="C25/30" selected>C25/30</option>
+              <option value="C30/37">C30/37</option>
+              <option value="C35/45">C35/45</option>
+              <option value="C40/50">C40/50</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Slab thickness h <span class="unit">[mm]</span></label>
+            <input type="number" id="h_slab" value="100" min="90" step="5" onchange="recalc()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Fibre type</label>
+          <select id="fibre_type" onchange="recalc()">
+            <option value="HE90/60" selected>HE90/60</option>
+            <option value="HE 75/50">HE 75/50</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fibre dosage</label>
+          <div class="radio-group">
+            <input type="radio" name="dosage" id="dos35" value="35" checked onchange="recalc()">
+            <label for="dos35">35 kg/m³</label>
+            <input type="radio" name="dosage" id="dos40" value="40" onchange="recalc()">
+            <label for="dos40">40 kg/m³</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subgrade -->
+    <div class="section">
+      <div class="section-header open" onclick="toggleSection(this)">
+        <span class="sico" style="background:#EBF7EA;color:var(--green)">S</span>
+        <span class="stitle">Subgrade Data</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div class="field">
+            <label>EV2 <span class="unit">[MPa]</span></label>
+            <input type="number" id="Ev2" value="100" min="1" step="10" onchange="recalc()">
+          </div>
+          <div class="field">
+            <label>EV2 / EV1 ratio</label>
+            <input type="number" id="Ev2_Ev1" value="2.2" min="1" max="5" step="0.1" onchange="recalc()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Direct k value <span class="unit">[N/mm³]</span> <span style="font-size:11px;color:#94a3b8">(optional — leave 0 to derive from EV2)</span></label>
+          <input type="number" id="k_direct" value="0" min="0" step="0.01" onchange="recalc()">
+        </div>
+        <div class="toggle-field">
+          <label class="toggle-switch">
+            <input type="checkbox" id="ins_toggle" onchange="toggleInsulation();recalc()">
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+          <label for="ins_toggle" style="font-size:13px;color:var(--text);font-weight:600;cursor:pointer">Insulation under slab</label>
+        </div>
+        <div class="conditional" id="ins_fields">
+          <div class="field-row">
+            <div class="field">
+              <label>Insulation type</label>
+              <select id="ins_type" onchange="recalc()">
+                <option value="EPS 100">EPS 100</option>
+                <option value="EPS 120">EPS 120</option>
+                <option value="EPS 150">EPS 150</option>
+                <option value="EPS 200" selected>EPS 200</option>
+                <option value="EPS 250">EPS 250</option>
+                <option value="EPS 300">EPS 300</option>
+                <option value="XPS 200">XPS 200</option>
+                <option value="XPS 300">XPS 300</option>
+                <option value="XPS 400">XPS 400</option>
+                <option value="XPS 500">XPS 500</option>
+                <option value="XPS 700">XPS 700</option>
+                <option value="Finnfoam FL-200">Finnfoam FL-200</option>
+                <option value="Finnfoam FL-300">Finnfoam FL-300</option>
+                <option value="Finnfoam FL-400">Finnfoam FL-400</option>
+                <option value="Finnfoam FI-500">Finnfoam FI-500</option>
+                <option value="Finnfoam FI-700">Finnfoam FI-700</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Thickness <span class="unit">[mm]</span></label>
+              <select id="ins_thick" onchange="recalc()">
+                <option value="100" selected>100</option>
+                <option value="150">150</option>
+                <option value="200">200</option>
+                <option value="250">250</option>
+                <option value="300">300</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loads -->
+    <div class="section">
+      <div class="section-header open" onclick="toggleSection(this)">
+        <span class="sico" style="background:#ebebeb;color:var(--muted)">L</span>
+        <span class="stitle">Loading Data</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body open">
+
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Rack / Point Load (PL)</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Single rack leg Pk <span class="unit">[kN]</span></label>
+            <input type="number" id="Pk" value="90" min="0" step="1" onchange="recalc()">
+          </div>
+          <div class="field">
+            <label>Rack spacing z <span class="unit">[mm]</span></label>
+            <input type="number" id="z_rack" value="5000" min="0" step="100" onchange="recalc()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Baseplate a × b <span class="unit">[mm × mm]</span></label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" id="bp_a" value="120" min="50" step="5" onchange="recalc()" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+            <span style="color:var(--muted);font-weight:600">×</span>
+            <input type="number" id="bp_b" value="120" min="50" step="5" onchange="recalc()" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+          </div>
+        </div>
+        <div class="field">
+          <label>Rack leg spacing in one row <span class="unit">[mm]</span></label>
+          <input type="number" id="z_row" value="900" min="0" step="50" onchange="recalc()">
+        </div>
+
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Uniformly Distributed Load (UDL)</div>
+        <div class="field">
+          <label>Unfactored UDL Qk,udl <span class="unit">[kN/m²]</span></label>
+          <input type="number" id="Qk_udl" value="50" min="0" step="1" onchange="recalc()">
+        </div>
+
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Line Load (LL)</div>
+        <div class="field">
+          <label>Unfactored Plin,k <span class="unit">[kN/m]</span></label>
+          <input type="number" id="Plin_k" value="0" min="0" step="1" onchange="recalc()">
+        </div>
+
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Forklift / Wheel Load (FL)</div>
+        <div class="field">
+          <label>Industrial floor load class</label>
+          <select id="fl_class" onchange="updateFL();recalc()">
+            <option value="FL1">FL1 — 3.1 t &nbsp;| wheel 13 kN</option>
+            <option value="FL2">FL2 — 4.6 t &nbsp;| wheel 20 kN</option>
+            <option value="FL3" selected>FL3 — 6.9 t &nbsp;| wheel 31.5 kN</option>
+            <option value="FL4">FL4 — 10 t &nbsp;&nbsp;| wheel 45 kN</option>
+            <option value="FL5">FL5 — 15 t &nbsp;&nbsp;| wheel 70 kN</option>
+            <option value="FL6">FL6 — 19 t &nbsp;&nbsp;| wheel 85 kN</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Wheel load Qk,FL <span class="unit">[kN]</span></label>
+            <input type="number" id="Qk_FL_disp" value="31.5" readonly style="background:#f8fafc;color:var(--muted)">
+          </div>
+          <div class="field">
+            <label>Axle width <span class="unit">[mm]</span></label>
+            <input type="number" id="fl_axle_disp" value="1000" readonly style="background:#f8fafc;color:var(--muted)">
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Truck Load (TL)</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Wheel load Qk,TL <span class="unit">[kN]</span></label>
+            <input type="number" id="Qk_TL" value="30" min="0" step="1" onchange="recalc()">
+          </div>
+          <div class="field">
+            <label>Axle width z <span class="unit">[mm]</span></label>
+            <input type="number" id="z_TL" value="1800" min="0" step="50" onchange="recalc()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Wheel type</label>
+          <div class="radio-group">
+            <input type="radio" name="wheel_type" id="wt_single" value="Single wheel" checked onchange="recalc()">
+            <label for="wt_single">Single wheel</label>
+            <input type="radio" name="wheel_type" id="wt_twin" value="Twin wheel" onchange="recalc()">
+            <label for="wt_twin">Twin wheel</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="recalc()">↻ Recalculate</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       RESULTS PANEL
+  ════════════════════════════════════════════════ -->
+  <div class="results-panel">
+    <div class="results-title">
+      Design Results
+    </div>
+    <div id="results-container">
+      <div class="placeholder">
+        <p><strong>Results will appear here.</strong></p>
+        <p>Adjust inputs on the left — the calculator updates automatically.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <strong>Disclaimer:</strong>
+  Primekss or any affiliate is not liable for the inputs provided by the person filling in the calculation.
+  The PrīmX design note shows the load bearing capacity of the PrīmX slab under given subbase characteristics.
+  Loading and subbase data are provided by the customer and must be checked against project specifications.
+  Primekss does not provide engineering services to calculate load bearing capacity of the subbase.
+  The calculation is based on TR34 4th Ed. Yield Line Theory. For slabs with special requirements, contact PrīmX design engineering team.
+  PrīmX and its design is patented worldwide.
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA TABLES
+// ═══════════════════════════════════════════════════════════
+
+const CONCRETE = {
+  'B30':    { fck: 30 },
+  'B35':    { fck: 35 },
+  'C25/30': { fck: 25 },
+  'C30/37': { fck: 30 },
+  'C35/45': { fck: 35 },
+  'C40/50': { fck: 40 }
+};
+
+// FL class: wheel load [kN per wheel], axle width [m], capacity [t]
+const FL_DATA = {
+  'FL1': { wheelLoad: 13,   axleWidth: 0.85, capacity: 3.1  },
+  'FL2': { wheelLoad: 20,   axleWidth: 0.95, capacity: 4.6  },
+  'FL3': { wheelLoad: 31.5, axleWidth: 1.00, capacity: 6.9  },
+  'FL4': { wheelLoad: 45,   axleWidth: 1.20, capacity: 10   },
+  'FL5': { wheelLoad: 70,   axleWidth: 1.50, capacity: 15   },
+  'FL6': { wheelLoad: 85,   axleWidth: 1.80, capacity: 19   }
+};
+
+// Insulation: C2% [kPa], E_long [kPa]
+const INS_DATA = {
+  'EPS 100':       { c2: 30,  elong: 1500  },
+  'EPS 120':       { c2: 36,  elong: 1800  },
+  'EPS 150':       { c2: 45,  elong: 2250  },
+  'EPS 200':       { c2: 60,  elong: 3000  },
+  'EPS 250':       { c2: 75,  elong: 3750  },
+  'EPS 300':       { c2: 90,  elong: 4500  },
+  'XPS 200':       { c2: 60,  elong: 3000  },
+  'XPS 300':       { c2: 90,  elong: 4500  },
+  'XPS 400':       { c2: 120, elong: 6000  },
+  'XPS 500':       { c2: 150, elong: 7500  },
+  'XPS 700':       { c2: 210, elong: 10500 },
+  'Finnfoam FL-200':{ c2: 90,  elong: 4500  },
+  'Finnfoam FL-300':{ c2: 120, elong: 6000  },
+  'Finnfoam FL-400':{ c2: 180, elong: 9000  },
+  'Finnfoam FI-500':{ c2: 225, elong: 11250 },
+  'Finnfoam FI-700':{ c2: 270, elong: 13500 }
+};
+
+// ═══════════════════════════════════════════════════════════
+// CALCULATION ENGINE
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Compute PRd (failure load capacity) via interpolation.
+ * @param {number} z       - load spacing [mm]
+ * @param {number} lr      - radius of relative stiffness [mm]
+ * @param {number} h       - slab thickness [mm]
+ * @param {number} MRd     - design moment resistance [kNm/m]
+ * @param {number} ar_lr   - ratio ar/lr
+ * @returns {number} PRd [kN]
+ */
+function computePRd(z, lr, h, MRd, ar_lr) {
+  let PRd0, PRd02;
+  // Single load case: z≤2h (combined) OR z>6lr (independent)
+  if (z <= 2 * h || z > 6 * lr) {
+    // TR34 Eqn. (21)
+    PRd0  = 4 * Math.PI * MRd;
+    PRd02 = 8 * Math.PI * MRd / (1 - 1/15);          // 1 - 0.2/3 = 14/15
+  } else {
+    // TR34 Eqn. (27)/(28) — dual load case
+    PRd0  = (2 * Math.PI + 1.8 * z / lr) * 2 * MRd;
+    PRd02 = (4 * Math.PI / (1 - 1/15) + 1.8 * z / (lr * 0.9)) * 2 * MRd;
+  }
+  return ar_lr < 0.2
+    ? (ar_lr * (PRd02 - PRd0) / 0.2 + PRd0)
+    : PRd02;
+}
+
+/**
+ * Determine joint spacing from placement and dosage.
+ */
+function jointSpacing(placement, dosage) {
+  if (placement === 'Inside/Heated') return '∞';
+  if (placement === 'Freezer')        return 40;
+  if (placement === 'Outside')        return dosage === 35 ? 25 : 35;
+  if (placement === 'Cold/Unheated')  return dosage === 35 ? 60 : 80;
+  return '∞';
+}
+
+/**
+ * Main calculation function.
+ */
+function calculate(inp) {
+  const { concreteClass, dosage, h, placement,
+          Pk, bp_a, bp_b, z_rack, z_row,
+          Qk_udl, Plin_k,
+          flClass, Qk_TL, z_TL, wheelType,
+          Ev2, Ev2_Ev1, k_direct,
+          useIns, insType, insThick } = inp;
+
+  const c = CONCRETE[concreteClass];
+  if (!c) return null;
+  const fck = c.fck;
+
+  // ── Concrete material properties ──────────────────────
+  const Ecm     = 22000 * Math.pow((fck + 8) / 10, 0.3);                          // MPa
+  const fctm    = fck <= 50
+                  ? 0.3  * Math.pow(fck, 2/3)
+                  : 2.12 * Math.log((fck + 8) / 10);                              // MPa
+  const fctm_fl = Math.max((1.6 - h / 1000) * fctm, fctm);                        // MPa
+  const gc = 1.5, gG = 1.35, gQ1 = 1.2, gQ2 = 1.6, nu = 0.15;
+  const fctd_fl = fctm_fl / gc;                                                    // MPa
+  const Gk_slab = 2400 * h / 100000;                                              // kN/m²
+  const spl     = dosage >= 40 ? 2.7 : 2.5;                                       // MPa
+  const MRd     = 0.45 * spl * h * h / gc / 1000;                                 // kNm/m
+
+  // ── Subgrade reaction ──────────────────────────────────
+  const kres_ev2 = Ev2 / 550 / Ev2_Ev1;                                           // N/mm³
+  const ksub     = (k_direct > 0) ? Math.min(k_direct, kres_ev2) : kres_ev2;     // N/mm³
+  let kres = ksub;
+  let kins = null;
+  if (useIns && INS_DATA[insType] && insThick > 0) {
+    kins = INS_DATA[insType].elong / insThick / 1000;                              // N/mm³
+    kres = ksub * kins / (ksub + kins);
+  }
+
+  // ── Radius of relative stiffness ──────────────────────
+  const lr = Math.pow((Ecm * Math.pow(h, 3)) / (12 * (1 - nu * nu) * kres), 0.25); // mm
+
+  // ══ POINT LOAD CHECK ════════════════════════════════════
+  const r_bp = Math.sqrt(bp_a * bp_b / Math.PI);
+  let ar_PL;
+  if (z_rack <= 2 * h) {
+    ar_PL = Math.sqrt(r_bp * (z_rack / 2 + r_bp) / 2);
+  } else {
+    ar_PL = r_bp;
+  }
+  const dual_PL = z_rack < 6 * lr;
+  const Pd      = dual_PL ? 2 * Pk * gQ1 : Pk * gQ1;
+  const ar_lr_PL = ar_PL / lr;
+  const PRd_PL   = computePRd(z_rack, lr, h, MRd, ar_lr_PL);
+  const PL_ok    = Pk > 0 ? Pd < PRd_PL : null;
+
+  // ══ UDL CHECK ════════════════════════════════════════════
+  const M_crack = fctd_fl * h * h / 6000;                                         // kNm/m (= TR34 Eqn.2)
+  const lambda  = Math.pow(3 * kres / (Ecm * Math.pow(h, 3)), 0.25) * 1000;       // m⁻¹
+  const QRd     = 5.95 * lambda * lambda * M_crack;                                // kN/m² (TR34 Eqn.35)
+  const UDL_ok  = Qk_udl > 0 ? Qk_udl < QRd : null;
+
+  // ══ FORKLIFT CHECK ════════════════════════════════════════
+  const fl       = FL_DATA[flClass];
+  const Qk_FL    = fl.wheelLoad;
+  const z_FL     = fl.axleWidth * 1000;                                            // mm
+  const ar_FL    = Qk_FL > 0 ? Math.sqrt(Qk_FL * 1000 / Math.PI / 1.0) : 0;     // p=1 MPa (pneumatic)
+  const dual_FL  = z_FL < 6 * lr;
+  const Qd_FL    = dual_FL ? 2 * Qk_FL * gQ2 : Qk_FL * gQ2;
+  const ar_lr_FL = ar_FL / lr;
+  const PRd_FL   = computePRd(z_FL, lr, h, MRd, ar_lr_FL);
+  const FL_ok    = Qk_FL > 0 ? Qd_FL < PRd_FL : null;
+
+  // ══ TRUCK CHECK ═══════════════════════════════════════════
+  const p_TL     = wheelType === 'Twin wheel' ? 0.4 : 1.0;                        // MPa
+  const ar_TL    = Qk_TL > 0 ? Math.sqrt(Qk_TL * 1000 / Math.PI / p_TL) : 0;
+  const dual_TL  = z_TL < 6 * lr;
+  const Qd_TL    = dual_TL ? 2 * Qk_TL * gQ2 : Qk_TL * gQ2;
+  const ar_lr_TL = ar_TL / lr;
+  const PRd_TL   = computePRd(z_TL, lr, h, MRd, ar_lr_TL);
+  const TL_ok    = Qk_TL > 0 ? Qd_TL < PRd_TL : null;
+
+  // ══ LINE LOAD CHECK ═══════════════════════════════════════
+  const PR_lin  = 4 * lambda * M_crack;                                            // kN/m (TR34 Eqn.34)
+  const LL_ok   = Plin_k > 0 ? Plin_k < PR_lin : null;
+
+  // ══ INSULATION PRESSURE CHECK ═════════════════════════════
+  let ins_check = null;
+  if (useIns && INS_DATA[insType]) {
+    const ins    = INS_DATA[insType];
+    const PI34   = 3.14; // spreadsheet uses 3.14 (not Math.PI) for insulation formulas
+    const b_edge  = 2.07 * lr;   // edge distribution length [mm]
+    const b_inner = 2.75 * lr;   // inner distribution length [mm]
+    const x1      = 500;          // assumed distance from free edge [mm]
+    const sigma_ins = ins.c2;    // 2% compressive strength [kPa]
+    const p_sw = gG * 24 * h / 1000;  // slab self-weight contribution [kPa]
+
+    // Inner rack pressure (P3) — TR34-based formula
+    const p_inner_P3 = gQ1 * Pk / (2 * 0.167 * PI34 * (b_inner/1000)**2); // kPa
+    // Additional from adjacent rack leg in same row (P4)
+    const p_P4 = inp.z_row < b_inner ? p_inner_P3 * (b_inner - inp.z_row) / b_inner : 0;
+    // Additional from previous rack row (P2)
+    const p_P2 = z_rack < b_inner ? p_inner_P3 * (b_inner - z_rack) / b_inner : 0;
+    // Additional from diagonal rack (P1 = z_row + z_rack)
+    const dist_P1 = inp.z_row + z_rack;
+    const p_P1 = dist_P1 < b_inner ? p_inner_P3 * (b_inner - dist_P1) / b_inner : 0;
+    const p_inner_total = p_inner_P3 + p_P1 + p_P2 + p_P4;
+
+    // Edge single rack pressure (at x1 from free edge)
+    let p_edge;
+    if (x1 < b_edge) {
+      const denom1 = 0.167 * PI34 * (b_edge/1000)**2 + 0.167 * PI34 * ((b_edge/1000)**2 - ((1 - x1/b_edge) * b_edge/1000)**2);
+      const denom2 = 0.167 * PI34 * (b_edge/1000)**2 + 0.167 * PI34 * ((b_edge/1000)**2 - ((1 - (x1+inp.z_row)/b_edge * (x1+inp.z_row < b_edge ? 1 : x1/x1)) * b_edge/1000)**2);
+      p_edge = gQ1 * Pk / denom2;
+    } else {
+      p_edge = gQ1 * Pk / (2 * 0.167 * PI34 * (b_edge/1000)**2);
+    }
+
+    // Max pressure = worst case of inner / edge + self-weight
+    const p_max_loads = Math.max(p_inner_total, p_edge);
+    const p_max = p_max_loads + p_sw;
+
+    // UDL on insulation
+    const Qd_udl_ins = 1.5 * Qk_udl;
+
+    ins_check = {
+      p_max, sigma_ins,
+      p_inner_P3, p_inner_total, p_edge, p_sw,
+      util: p_max / sigma_ins,
+      ok: p_max < sigma_ins,
+      udl_ok: Qd_udl_ins < sigma_ins,
+      Qd_udl: Qd_udl_ins,
+      b_edge, b_inner, kins, kres
+    };
+  }
+
+  // ══ WARNINGS ══════════════════════════════════════════════
+  const warnings = [];
+  if (h < 90)  warnings.push('Slab thickness < 90 mm — contact Primekss engineers or increase thickness to at least 90 mm.');
+  if (h < 150 && (placement === 'Outside' || placement === 'Freezer')) {
+    warnings.push('Minimum recommended slab thickness for ' + placement + ' is 150 mm.');
+  }
+  if (Ev2 < 80) warnings.push('EV2 = ' + Ev2 + ' MPa is below minimum (80 MPa) — contact Primekss engineers.');
+  if (Ev2_Ev1 > 2.5) warnings.push('EV2/EV1 ratio = ' + Ev2_Ev1 + ' exceeds 2.5 — decrease value or contact Primekss representative.');
+  if (ksub < 0.053) warnings.push('kres = ' + ksub.toFixed(4) + ' N/mm³ is below minimum (0.053) — increase k-value or contact Primekss representative.');
+  if (inp.z_row < 800) warnings.push('Rack leg spacing in one row = ' + inp.z_row + ' mm is below minimum 800 mm — contact Primekss engineers.');
+  if (Pk > 120) warnings.push('Rack load Pk = ' + Pk + ' kN exceeds standard limit (120 kN) — contact Primekss representative.');
+  if (Qk_udl > 70) warnings.push('UDL = ' + Qk_udl + ' kN/m² exceeds 70 kN/m² — contact Primekss representative.');
+  if (Plin_k > 20) warnings.push('Line load = ' + Plin_k + ' kN/m exceeds 20 kN/m — contact Primekss engineers.');
+  if (flClass === 'FL5' || flClass === 'FL6') warnings.push('Floor class ' + flClass + ' — contact Primekss engineers for verification.');
+  if (placement === 'Outside' && concreteClass !== 'C35/45' && concreteClass !== 'C40/50') {
+    warnings.push('Outside placement — minimum concrete class C35/45 is recommended.');
+  }
+
+  // ══ OVERALL ═══════════════════════════════════════════════
+  const allChecks = [PL_ok, UDL_ok, FL_ok, TL_ok, LL_ok];
+  const definedChecks = allChecks.filter(c => c !== null);
+  const overallOk = definedChecks.length > 0 && definedChecks.every(Boolean);
+
+  return {
+    // material
+    fck, Ecm, fctm, fctm_fl, fctd_fl, MRd, spl, Gk_slab, gc, gG, gQ1, gQ2,
+    // subgrade
+    kres_ev2, ksub, kres, kins, lr,
+    // point load
+    ar_PL, Pd, PRd_PL, PL_ok, ar_lr_PL, dual_PL,
+    // udl
+    M_crack, lambda, QRd, UDL_ok,
+    // forklift
+    Qk_FL, z_FL, ar_FL, Qd_FL, PRd_FL, FL_ok, ar_lr_FL, dual_FL,
+    // truck
+    ar_TL, Qd_TL, PRd_TL, TL_ok, ar_lr_TL, p_TL, dual_TL,
+    // line load
+    PR_lin, LL_ok,
+    // insulation
+    ins_check,
+    // extra
+    jointSpacing: jointSpacing(placement, dosage),
+    warnings, overallOk
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════
+
+function fmt(v, dp = 2) {
+  if (v == null || isNaN(v)) return '—';
+  return (+v).toFixed(dp);
+}
+
+function statusIcon(ok) {
+  if (ok === null) return '–';
+  return ok ? '&#x2713;' : '&#x2717;';
+}
+function statusText(ok) {
+  if (ok === null) return 'N/A (load = 0)';
+  return ok ? 'DESIGN CONDITION OK' : 'DESIGN CONDITION NOT MET';
+}
+function checkClass(ok) {
+  if (ok === null) return '';
+  return ok ? 'ok' : 'fail';
+}
+
+function tex(s) {
+  if (typeof katex === 'undefined') return '<code>' + s + '</code>';
+  return katex.renderToString(s, { throwOnError: false, displayMode: false });
+}
+
+const TEX = {
+  Ecm:    String.raw`E_{cm} = 22\left[\dfrac{f_{ck}+8}{10}\right]^{0.3}`,
+  fctm:   String.raw`f_{ctm} = 0.30\,f_{ck}^{2/3}`,
+  fctmfl: String.raw`f_{ctm,fl} = \max\!\left\{\left(1.6-\tfrac{h}{1000}\right)f_{ctm},\;f_{ctm}\right\}`,
+  fctdfl: String.raw`f_{ctd,fl} = f_{ctm,fl}/\gamma_c`,
+  MRd:    String.raw`M_{Rd} = 0.45\,s_{pl}\,h^2/\gamma_c`,
+  lr:     String.raw`l_r = \left[\dfrac{E_{cm}\,h^3}{12(1-\nu^2)\,k_{res}}\right]^{0.25}`,
+  Mcrk:   String.raw`M = f_{ctd,fl}\,h^2/6`,
+  lam:    String.raw`\lambda = \left[\dfrac{3k_{res}}{E_{cm}\,h^3}\right]^{0.25}`,
+  QRd:    String.raw`Q_{Rd} = 5.95\,\lambda^2\,M`,
+  PRlin:  String.raw`P_{R,lin} = 4\lambda\,M`,
+  arFLp:  String.raw`a_r = \sqrt{Q_{k,FL}/(\pi p)},\;p=1\;\mathrm{MPa}`,
+  arPLs:  String.raw`a_r = r_b`,
+  arPLd:  String.raw`a_r = \sqrt{r_b(z/2+r_b)/2}`,
+  PdS:    String.raw`P_d = \gamma_{Q1}\cdot P_k`,
+  PdD:    String.raw`P_d = 2\gamma_{Q1}\cdot P_k`,
+  PRd0S:  String.raw`P_{Rd,0} = 4\pi M_{Rd}`,
+  PRd0D:  String.raw`P_{Rd,0} = (2\pi + 1.8\,z/l_r)\cdot 2M_{Rd}`,
+  QdFLS:  String.raw`Q_{d,FL} = \gamma_{Q2}\cdot Q_{k,FL}`,
+  QdFLD:  String.raw`Q_{d,FL} = 2\gamma_{Q2}\cdot Q_{k,FL}`,
+  QdTLS:  String.raw`Q_{d,TL} = \gamma_{Q2}\cdot Q_{k,TL}`,
+  QdTLD:  String.raw`Q_{d,TL} = 2\gamma_{Q2}\cdot Q_{k,TL}`,
+  arTLt:  String.raw`a_r = \sqrt{Q_{k,TL}/(\pi p)},\;p=0.4\;\mathrm{MPa}`,
+  arTLp:  String.raw`a_r = \sqrt{Q_{k,TL}/(\pi p)},\;p=1.0\;\mathrm{MPa}`
+};
+
+function buildResults(r, inp) {
+  const { concreteClass, dosage, h, placement, flClass, Pk, Qk_udl, Plin_k, Qk_TL, useIns } = inp;
+
+  let html = '';
+
+  // ── Overall Status ──────────────────────────────────────
+  html += `
+  <div class="overall-status ${r.overallOk ? 'ok' : 'fail'}">
+    <span class="os-icon">${r.overallOk ? '&#x2713;' : '&#x2717;'}</span>
+    <div>
+      <div>${r.overallOk ? 'ALL DESIGN CHECKS PASSED' : 'ONE OR MORE DESIGN CHECKS NOT MET'}</div>
+      <small style="font-weight:400;font-size:12px">Plastic design · Yield Line Theory · TR34 4th Edition</small>
+    </div>
+  </div>`;
+
+  // ── Warnings ────────────────────────────────────────────
+  if (r.warnings.length > 0) {
+    html += '<div class="warnings">';
+    r.warnings.forEach(w => {
+      html += `<div class="warn-msg"><span class="warn-ico">!</span> <span>${w}</span></div>`;
+    });
+    html += '</div>';
+  }
+
+  // ── Solution Summary ────────────────────────────────────
+  const js = r.jointSpacing;
+  html += `
+  <div class="summary-card">
+    <div class="summary-head">PrīmX Solution Summary</div>
+    <div class="summary-body">
+      <div class="summary-item"><div class="si-label">Concrete class</div><div class="si-value">${concreteClass}</div></div>
+      <div class="summary-item"><div class="si-label">Fibre type</div><div class="si-value" style="font-size:15px">${inp.fibreType}</div></div>
+      <div class="summary-item"><div class="si-label">Fibre dosage</div><div class="si-value">${dosage}<span class="si-unit"> kg/m³</span></div></div>
+      <div class="summary-item"><div class="si-label">Slab thickness</div><div class="si-value">${h}<span class="si-unit"> mm</span></div></div>
+      <div class="summary-item"><div class="si-label">Joint spacing</div><div class="si-value">${js}<span class="si-unit">${js !== '∞' ? ' m' : ''}</span></div></div>
+      <div class="summary-item"><div class="si-label">Placement</div><div class="si-value" style="font-size:12px;margin-top:4px">${placement}</div></div>
+    </div>
+  </div>`;
+
+  html += '<div class="results-grid">';
+
+  // ── Concrete Properties ─────────────────────────────────
+  html += `
+  <div class="card">
+    <div class="card-head navy">Concrete &amp; Slab Properties</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Concrete class (fck)</span><span class="cval">${fmt(r.fck, 0)}<span class="cunit"> MPa</span></span></div>
+      <div class="calc-row"><span class="clabel">Young's modulus Ecm</span><span class="cval">${fmt(r.Ecm, 0)}<span class="cunit"> MPa</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.Ecm)}</span><span class="f-src">EN 1992-1-1, Tab. 3.1</span></div>
+      <div class="calc-row"><span class="clabel">Mean tensile strength fctm</span><span class="cval">${fmt(r.fctm)}<span class="cunit"> MPa</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.fctm)}</span><span class="f-src">EN 1992-1-1, Tab. 3.1</span></div>
+      <div class="calc-row"><span class="clabel">Flexural tensile strength fctm,fl</span><span class="cval">${fmt(r.fctm_fl)}<span class="cunit"> MPa</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.fctmfl)}</span><span class="f-src">EN 1992-1-1, Exp. 3.23</span></div>
+      <div class="calc-row"><span class="clabel">Design flexural strength fctd,fl</span><span class="cval">${fmt(r.fctd_fl)}<span class="cunit"> MPa</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.fctdfl)}</span><span class="f-src">TR34 4th Ed., Eqn. (2)</span></div>
+      <div class="calc-row"><span class="clabel">Slab self-weight Gk,slab</span><span class="cval">${fmt(r.Gk_slab)}<span class="cunit"> kN/m²</span></span></div>
+      <div class="calc-row"><span class="clabel">Plastic tensile strength spl</span><span class="cval">${fmt(r.spl)}<span class="cunit"> MPa</span></span></div>
+      <div class="calc-row"><span class="clabel bold">Design moment resistance MRd</span><span class="cval bold">${fmt(r.MRd)}<span class="cunit"> kNm/m</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.MRd)}</span><span class="f-src">TR34 4th Ed.</span></div>
+    </div>
+  </div>`;
+
+  // ── Subgrade & Stiffness ────────────────────────────────
+  html += `
+  <div class="card">
+    <div class="card-head navy">Subgrade &amp; Stiffness</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">kres from EV2</span><span class="cval">${fmt(r.kres_ev2, 5)}<span class="cunit"> N/mm³</span></span></div>
+      <div class="calc-row"><span class="clabel">Governing ksub</span><span class="cval">${fmt(r.ksub, 5)}<span class="cunit"> N/mm³</span></span></div>
+      ${r.kins != null ? `<div class="calc-row"><span class="clabel">Insulation stiffness kins</span><span class="cval">${fmt(r.kins, 5)}<span class="cunit"> N/mm³</span></span></div>` : ''}
+      <div class="calc-row"><span class="clabel bold">System kres</span><span class="cval bold">${fmt(r.kres, 5)}<span class="cunit"> N/mm³</span></span></div>
+      <div class="calc-row"><span class="clabel bold">Radius of relative stiffness lr</span><span class="cval bold">${fmt(r.lr, 1)}<span class="cunit"> mm</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.lr)}</span><span class="f-src">TR34 4th Ed., Eqn. (20)</span></div>
+    </div>
+  </div>`;
+
+  // ── Point Load Check ────────────────────────────────────
+  const pl_label = r.dual_PL && Pk > 0 ? 'Dual point loads (z < 6·lr)' : 'Single point load (z > 6·lr)';
+  html += `
+  <div class="card">
+    <div class="card-head blue">Load Case — Point Load (Racking)</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Load case</span><span class="cval" style="font-size:12px">${Pk > 0 ? pl_label : 'N/A'}</span></div>
+      <div class="calc-row"><span class="clabel">Contact radius ar</span><span class="cval">${fmt(r.ar_PL, 1)}<span class="cunit"> mm</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(r.dual_PL && Pk > 0 ? TEX.arPLd : TEX.arPLs)}</span><span class="f-src">TR34 4th Ed., Eqn. (17)</span></div>
+      <div class="calc-row"><span class="clabel">ar / lr ratio</span><span class="cval">${fmt(r.ar_lr_PL, 4)}</span></div>
+      <div class="calc-row"><span class="clabel bold">Design load Pd = γQ1 × Pk</span><span class="cval bold">${fmt(r.Pd, 1)}<span class="cunit"> kN</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(r.dual_PL && Pk > 0 ? TEX.PdD : TEX.PdS)}</span><span class="f-src">TR34 4th Ed.</span></div>
+      <div class="calc-row"><span class="clabel bold">Capacity PRd</span><span class="cval bold">${fmt(r.PRd_PL, 1)}<span class="cunit"> kN</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(r.dual_PL && Pk > 0 ? TEX.PRd0D : TEX.PRd0S)} — interpolated at aᵣ/lᵣ</span><span class="f-src">TR34 4th Ed., ${r.dual_PL && Pk > 0 ? 'Eqns. (27)–(28)' : 'Eqns. (21)–(22)'}</span></div>
+      <div class="calc-row"><span class="clabel">Utilisation Pd / PRd</span><span class="cval" style="color:${r.PL_ok===null?'var(--muted)':r.PL_ok?'var(--green)':'var(--red)'};">${Pk>0?fmt(r.Pd/r.PRd_PL*100,1)+'%':'—'}</span></div>
+      ${Pk > 0 ? `<div class="check-row ${checkClass(r.PL_ok)}"><span class="check-ico">${statusIcon(r.PL_ok)}</span><div class="check-values"><div>${r.Pd.toFixed(1)} kN (Pd) ${r.PL_ok ? '<' : '>'} ${r.PRd_PL.toFixed(1)} kN (PRd)</div><small>${statusText(r.PL_ok)}</small></div></div>` : '<div class="check-row"><span class="check-ico">–</span><div class="check-values">No rack load defined</div></div>'}
+    </div>
+  </div>`;
+
+  // ── UDL Check ────────────────────────────────────────────
+  html += `
+  <div class="card">
+    <div class="card-head blue">Load Case — UDL</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Moment at first crack M</span><span class="cval">${fmt(r.M_crack)}<span class="cunit"> kNm/m</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.Mcrk)}</span><span class="f-src">TR34 4th Ed., Eqn. (2)</span></div>
+      <div class="calc-row"><span class="clabel">Critical width λ</span><span class="cval">${fmt(r.lambda)}<span class="cunit"> m⁻¹</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.lam)}</span><span class="f-src">TR34 4th Ed., Eqn. (33)</span></div>
+      <div class="calc-row"><span class="clabel bold">UDL capacity QRd</span><span class="cval bold">${fmt(r.QRd, 1)}<span class="cunit"> kN/m²</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.QRd)}</span><span class="f-src">TR34 4th Ed., Eqn. (35)</span></div>
+      <div class="calc-row"><span class="clabel bold">Applied Qk,udl</span><span class="cval bold">${Qk_udl}<span class="cunit"> kN/m²</span></span></div>
+      <div class="calc-row"><span class="clabel">Utilisation</span><span class="cval" style="color:${r.UDL_ok===null?'var(--muted)':r.UDL_ok?'var(--green)':'var(--red)'};">${Qk_udl>0?fmt(Qk_udl/r.QRd*100,1)+'%':'—'}</span></div>
+      ${Qk_udl > 0 ? `<div class="check-row ${checkClass(r.UDL_ok)}"><span class="check-ico">${statusIcon(r.UDL_ok)}</span><div class="check-values"><div>${Qk_udl} kN/m² (Qk) ${r.UDL_ok ? '<' : '>'} ${r.QRd.toFixed(1)} kN/m² (QRd)</div><small>${statusText(r.UDL_ok)}</small></div></div>` : '<div class="check-row"><span class="check-ico">–</span><div class="check-values">No UDL defined</div></div>'}
+    </div>
+  </div>`;
+
+  // ── Forklift Check ───────────────────────────────────────
+  const fl_label = r.dual_FL && r.Qk_FL > 0 ? 'Dual (z < 6·lr)' : 'Single (z > 6·lr)';
+  html += `
+  <div class="card">
+    <div class="card-head blue">Load Case — Forklift (${flClass})</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Wheel load Qk,FL</span><span class="cval">${r.Qk_FL}<span class="cunit"> kN</span></span></div>
+      <div class="calc-row"><span class="clabel">Axle width z</span><span class="cval">${r.z_FL}<span class="cunit"> mm</span></span></div>
+      <div class="calc-row"><span class="clabel">Load case</span><span class="cval" style="font-size:12px">${fl_label}</span></div>
+      <div class="calc-row"><span class="clabel">Contact radius ar</span><span class="cval">${fmt(r.ar_FL, 1)}<span class="cunit"> mm</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.arFLp)}</span><span class="f-src">TR34 4th Ed.</span></div>
+      <div class="calc-row"><span class="clabel">ar / lr ratio</span><span class="cval">${fmt(r.ar_lr_FL, 4)}</span></div>
+      <div class="calc-row"><span class="clabel bold">Design load Qd,FL = γQ2 × Qk,FL</span><span class="cval bold">${fmt(r.Qd_FL, 1)}<span class="cunit"> kN</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(r.dual_FL ? TEX.QdFLD : TEX.QdFLS)}</span><span class="f-src">TR34 4th Ed.</span></div>
+      <div class="calc-row"><span class="clabel bold">Capacity PRd,FL</span><span class="cval bold">${fmt(r.PRd_FL, 1)}<span class="cunit"> kN</span></span></div>
+      <div class="formula-row"><span class="f-eq">Capacity interpolated at aᵣ/lᵣ ratio</span><span class="f-src">TR34 4th Ed., ${r.dual_FL ? 'Eqns. (27)–(28)' : 'Eqns. (21)–(22)'}</span></div>
+      <div class="calc-row"><span class="clabel">Utilisation</span><span class="cval" style="color:${r.FL_ok===null?'var(--muted)':r.FL_ok?'var(--green)':'var(--red)'};">${r.Qk_FL>0?fmt(r.Qd_FL/r.PRd_FL*100,1)+'%':'—'}</span></div>
+      ${r.Qk_FL > 0 ? `<div class="check-row ${checkClass(r.FL_ok)}"><span class="check-ico">${statusIcon(r.FL_ok)}</span><div class="check-values"><div>${r.Qd_FL.toFixed(1)} kN (Qd,FL) ${r.FL_ok ? '<' : '>'} ${r.PRd_FL.toFixed(1)} kN (PRd)</div><small>${statusText(r.FL_ok)}</small></div></div>` : '<div class="check-row"><span class="check-ico">–</span><div class="check-values">No forklift load defined</div></div>'}
+    </div>
+  </div>`;
+
+  // ── Truck Check ──────────────────────────────────────────
+  const tl_label = r.dual_TL && Qk_TL > 0 ? 'Dual (z < 6·lr)' : 'Single (z > 6·lr)';
+  html += `
+  <div class="card">
+    <div class="card-head blue">Load Case — Truck</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Wheel type</span><span class="cval">${inp.wheelType}</span></div>
+      <div class="calc-row"><span class="clabel">Contact pressure p</span><span class="cval">${r.p_TL}<span class="cunit"> MPa</span></span></div>
+      <div class="calc-row"><span class="clabel">Load case</span><span class="cval" style="font-size:12px">${tl_label}</span></div>
+      <div class="calc-row"><span class="clabel">Contact radius ar</span><span class="cval">${fmt(r.ar_TL, 1)}<span class="cunit"> mm</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(inp.wheelType === 'Twin wheel' ? TEX.arTLt : TEX.arTLp)}</span><span class="f-src">TR34 4th Ed.</span></div>
+      <div class="calc-row"><span class="clabel">ar / lr ratio</span><span class="cval">${fmt(r.ar_lr_TL, 4)}</span></div>
+      <div class="calc-row"><span class="clabel bold">Design load Qd,TL = γQ2 × Qk,TL</span><span class="cval bold">${fmt(r.Qd_TL, 1)}<span class="cunit"> kN</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(r.dual_TL ? TEX.QdTLD : TEX.QdTLS)}</span><span class="f-src">TR34 4th Ed.</span></div>
+      <div class="calc-row"><span class="clabel bold">Capacity PRd,TL</span><span class="cval bold">${fmt(r.PRd_TL, 1)}<span class="cunit"> kN</span></span></div>
+      <div class="formula-row"><span class="f-eq">Capacity interpolated at aᵣ/lᵣ ratio</span><span class="f-src">TR34 4th Ed., ${r.dual_TL ? 'Eqns. (27)–(28)' : 'Eqns. (21)–(22)'}</span></div>
+      <div class="calc-row"><span class="clabel">Utilisation</span><span class="cval" style="color:${r.TL_ok===null?'var(--muted)':r.TL_ok?'var(--green)':'var(--red)'};">${Qk_TL>0?fmt(r.Qd_TL/r.PRd_TL*100,1)+'%':'—'}</span></div>
+      ${Qk_TL > 0 ? `<div class="check-row ${checkClass(r.TL_ok)}"><span class="check-ico">${statusIcon(r.TL_ok)}</span><div class="check-values"><div>${r.Qd_TL.toFixed(1)} kN (Qd,TL) ${r.TL_ok ? '<' : '>'} ${r.PRd_TL.toFixed(1)} kN (PRd)</div><small>${statusText(r.TL_ok)}</small></div></div>` : '<div class="check-row"><span class="check-ico">–</span><div class="check-values">No truck load defined</div></div>'}
+    </div>
+  </div>`;
+
+  // ── Line Load Check ──────────────────────────────────────
+  html += `
+  <div class="card">
+    <div class="card-head blue">Load Case — Line Load</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Critical width λ (= UDL λ)</span><span class="cval">${fmt(r.lambda)}<span class="cunit"> m⁻¹</span></span></div>
+      <div class="calc-row"><span class="clabel">Moment at first crack M</span><span class="cval">${fmt(r.M_crack)}<span class="cunit"> kNm/m</span></span></div>
+      <div class="calc-row"><span class="clabel bold">Line load capacity PR,lin</span><span class="cval bold">${fmt(r.PR_lin, 1)}<span class="cunit"> kN/m</span></span></div>
+      <div class="formula-row"><span class="f-eq">${tex(TEX.PRlin)}</span><span class="f-src">TR34 4th Ed., Eqn. (34)</span></div>
+      <div class="calc-row"><span class="clabel bold">Applied Plin,k</span><span class="cval bold">${Plin_k}<span class="cunit"> kN/m</span></span></div>
+      <div class="calc-row"><span class="clabel">Utilisation</span><span class="cval" style="color:${r.LL_ok===null?'var(--muted)':r.LL_ok?'var(--green)':'var(--red)'};">${Plin_k>0?fmt(Plin_k/r.PR_lin*100,1)+'%':'—'}</span></div>
+      ${Plin_k > 0 ? `<div class="check-row ${checkClass(r.LL_ok)}"><span class="check-ico">${statusIcon(r.LL_ok)}</span><div class="check-values"><div>${Plin_k} kN/m (Plin,k) ${r.LL_ok ? '<' : '>'} ${r.PR_lin.toFixed(1)} kN/m (PR,lin)</div><small>${statusText(r.LL_ok)}</small></div></div>` : '<div class="check-row"><span class="check-ico">–</span><div class="check-values">No line load defined</div></div>'}
+    </div>
+  </div>`;
+
+  // ── Safety Coefficients Reference ────────────────────────
+  html += `
+  <div class="card">
+    <div class="card-head orange">Safety Coefficients</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Self weight γG</span><span class="cval">${r.gG}</span></div>
+      <div class="calc-row"><span class="clabel">Material safety γc</span><span class="cval">${r.gc}</span></div>
+      <div class="calc-row"><span class="clabel">Racking loads γQ1</span><span class="cval">${r.gQ1}</span></div>
+      <div class="calc-row"><span class="clabel">Dynamic / wheel loads γQ2</span><span class="cval">${r.gQ2}</span></div>
+    </div>
+  </div>`;
+
+  // ── Insulation Check ─────────────────────────────────────
+  if (r.ins_check) {
+    const ic = r.ins_check;
+    html += `
+  <div class="card">
+    <div class="card-head navy">Insulation Pressure Check</div>
+    <div class="card-body">
+      <div class="calc-row"><span class="clabel">Insulation type / thickness</span><span class="cval">${inp.insType} / ${inp.insThick} mm</span></div>
+      <div class="calc-row"><span class="clabel">Insulation stiffness kins</span><span class="cval">${fmt(ic.kins, 5)}<span class="cunit"> N/mm³</span></span></div>
+      <div class="calc-row"><span class="clabel">System kres (incl. insulation)</span><span class="cval">${fmt(ic.kres, 5)}<span class="cunit"> N/mm³</span></span></div>
+      <div class="calc-row"><span class="clabel">Edge distribution length bedge</span><span class="cval">${fmt(ic.b_edge, 0)}<span class="cunit"> mm</span></span></div>
+      <div class="calc-row"><span class="clabel">Inner distribution length binner</span><span class="cval">${fmt(ic.b_inner, 0)}<span class="cunit"> mm</span></span></div>
+      <div class="calc-row"><span class="clabel">Inner rack pressure pinner</span><span class="cval">${fmt(ic.p_inner_P3, 1)}<span class="cunit"> kPa</span></span></div>
+      <div class="calc-row"><span class="clabel">Inner rack total (incl. neighbours)</span><span class="cval">${fmt(ic.p_inner_total, 1)}<span class="cunit"> kPa</span></span></div>
+      <div class="calc-row"><span class="clabel">Slab self-weight contribution</span><span class="cval">${fmt(ic.p_sw, 1)}<span class="cunit"> kPa</span></span></div>
+      <div class="calc-row"><span class="clabel bold">Max pressure on insulation pmax</span><span class="cval bold">${fmt(ic.p_max, 1)}<span class="cunit"> kPa</span></span></div>
+      <div class="calc-row"><span class="clabel bold">Insulation σ at 2% (σins.2%)</span><span class="cval bold">${fmt(ic.sigma_ins, 0)}<span class="cunit"> kPa</span></span></div>
+      <div class="calc-row"><span class="clabel">Utilisation</span><span class="cval" style="color:${ic.ok?'var(--green)':'var(--red)'};">${fmt(ic.util*100, 1)}%</span></div>
+      <div class="check-row ${ic.ok?'ok':'fail'}"><span class="check-ico">${statusIcon(ic.ok)}</span><div class="check-values"><div>${fmt(ic.p_max,1)} kPa ${ic.ok?'<':'>'} ${fmt(ic.sigma_ins,0)} kPa (σins.2%)</div><small>Rack pressure on insulation — ${statusText(ic.ok).toLowerCase()}</small></div></div>
+      <div class="divider"></div>
+      <div class="calc-row"><span class="clabel bold">Factored UDL Qd,udl (1.5×Qk)</span><span class="cval bold">${fmt(ic.Qd_udl,1)}<span class="cunit"> kPa</span></span></div>
+      <div class="check-row ${ic.udl_ok?'ok':'fail'}"><span class="check-ico">${statusIcon(ic.udl_ok)}</span><div class="check-values"><div>${fmt(ic.Qd_udl,1)} kPa (Qd,udl) ${ic.udl_ok?'<':'>'} ${fmt(ic.sigma_ins,0)} kPa (σins.2%)</div><small>UDL pressure on insulation — ${statusText(ic.udl_ok).toLowerCase()}</small></div></div>
+    </div>
+  </div>`;
+  }
+
+  html += '</div>'; // end results-grid
+
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function toggleInsulation() {
+  const toggle = document.getElementById('ins_toggle');
+  const fields = document.getElementById('ins_fields');
+  fields.classList.toggle('visible', toggle.checked);
+}
+
+function updateFL() {
+  const cls = document.getElementById('fl_class').value;
+  const fl  = FL_DATA[cls];
+  if (fl) {
+    document.getElementById('Qk_FL_disp').value  = fl.wheelLoad;
+    document.getElementById('fl_axle_disp').value = fl.axleWidth * 1000;
+  }
+}
+
+function gatherInputs() {
+  const dosage = parseInt(document.querySelector('input[name="dosage"]:checked').value);
+  const wheelType = document.querySelector('input[name="wheel_type"]:checked').value;
+  return {
+    concreteClass: document.getElementById('concrete_class').value,
+    fibreType:     document.getElementById('fibre_type').value,
+    dosage,
+    h:             parseFloat(document.getElementById('h_slab').value)   || 100,
+    placement:     document.getElementById('placement').value,
+    Pk:            parseFloat(document.getElementById('Pk').value)       || 0,
+    bp_a:          parseFloat(document.getElementById('bp_a').value)     || 120,
+    bp_b:          parseFloat(document.getElementById('bp_b').value)     || 120,
+    z_rack:        parseFloat(document.getElementById('z_rack').value)   || 5000,
+    z_row:         parseFloat(document.getElementById('z_row').value)    || 900,
+    Qk_udl:        parseFloat(document.getElementById('Qk_udl').value)  || 0,
+    Plin_k:        parseFloat(document.getElementById('Plin_k').value)  || 0,
+    flClass:       document.getElementById('fl_class').value,
+    Qk_TL:         parseFloat(document.getElementById('Qk_TL').value)   || 0,
+    z_TL:          parseFloat(document.getElementById('z_TL').value)    || 1800,
+    wheelType,
+    Ev2:           parseFloat(document.getElementById('Ev2').value)     || 100,
+    Ev2_Ev1:       parseFloat(document.getElementById('Ev2_Ev1').value) || 2.2,
+    k_direct:      parseFloat(document.getElementById('k_direct').value) || 0,
+    useIns:        document.getElementById('ins_toggle').checked,
+    insType:       document.getElementById('ins_type').value,
+    insThick:      parseFloat(document.getElementById('ins_thick').value) || 100
+  };
+}
+
+function recalc() {
+  const inp = gatherInputs();
+  const r   = calculate(inp);
+  const container = document.getElementById('results-container');
+  if (!r) {
+    container.innerHTML = '<div class="placeholder"><p>Invalid inputs — please check values.</p></div>';
+    return;
+  }
+  container.innerHTML = buildResults(r, inp);
+}
+
+// ─── Init ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Set today's date
+  const today = new Date();
+  document.getElementById('proj_date').value =
+    today.toLocaleDateString('lv-LV');
+
+  // Trigger initial calculation
+  recalc();
+});
+
+// Auto-recalc on any input change (catch keyboard input too)
+document.addEventListener('input', e => {
+  if (e.target.closest('.inputs-panel')) recalc();
+});
+</script>
+</body>
+</html>
